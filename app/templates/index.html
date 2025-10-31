@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="grid">
+  <aside class="panel">
+    <h3>Groups</h3>
+    <div id="groups"></div>
+    <form id="createGroupForm" class="form small">
+      <input id="groupName" placeholder="New group name" />
+      <button>Create</button>
+    </form>
+    <h3>Active users</h3>
+    <ul id="activeUsers" class="list"></ul>
+  </aside>
+  <section class="chat">
+    <div id="messages" class="messages"></div>
+    <form id="messageForm" class="form row">
+      <input id="messageInput" placeholder="Type a message" autocomplete="off" />
+      <button>Send</button>
+    </form>
+  </section>
+</section>
+
+<script defer src="{{ request.url_for('static', path='js/chat.js') }}?v={{ request.app.state.asset_version }}"></script>
+{% endblock %}

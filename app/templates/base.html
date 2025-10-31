@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title if title else 'Secure Chat' }}</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='css/styles.css') }}?v={{ request.app.state.asset_version }}" />
+    <script defer src="{{ request.url_for('static', path='js/theme.js') }}?v={{ request.app.state.asset_version }}"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">🔐 Secure Chat Demo</div>
+      <div class="spacer"></div>
+      <button id="themeToggle" class="ghost">Toggle Theme</button>
+    </header>
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+  </html>
