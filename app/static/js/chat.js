@@ -7,6 +7,7 @@
   const messageForm = document.getElementById('messageForm');
   const messageInput = document.getElementById('messageInput');
   const currentGroupTitle = document.getElementById('currentGroupTitle');
+  const groupActiveUsers = document.getElementById('groupActiveUsers');
   let currentGroup = null;
   let ws = null;
 
@@ -77,6 +78,19 @@
     ws.onclose = () => {};
   }
 
+  function updateGroupActiveUsers(){
+    if (!currentGroup || !groupActiveUsers) return;
+    api(`/api/groups/${currentGroup}/active_users`)
+      .then(list => {
+        if (!Array.isArray(list) || list.length === 0) {
+          groupActiveUsers.textContent = '—';
+          return;
+        }
+        groupActiveUsers.textContent = list.map(u => u.username).join(', ');
+      })
+      .catch(() => { groupActiveUsers.textContent = '—'; });
+  }
+
   function joinAndOpen(groupId, groupName){
     api('/api/groups/join?group_id='+groupId, { method: 'POST' })
       .then(() => api('/api/messages?group_id='+groupId))
@@ -85,6 +99,7 @@
         if (currentGroupTitle) currentGroupTitle.textContent = groupName || `#${groupId}`;
         renderMessages(msgs);
         openWS(groupId);
+        updateGroupActiveUsers();
       })
       .catch(e => console.error(e));
   }
@@ -123,6 +138,7 @@
   loadGroups();
   loadActiveUsers();
   setInterval(loadActiveUsers, 4000);
+  setInterval(updateGroupActiveUsers, 4000);
 
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {

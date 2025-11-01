@@ -27,25 +27,30 @@ class ConnectionManager:
         self.group_connections: Dict[int, Set[WebSocket]] = {}
         self.active_users: Dict[int, datetime] = {}
         self.active_connections: List[WebSocket] = []
+        # map each websocket to the associated user id for per-group active lists
+        self.ws_user: Dict[WebSocket, int] = {}
 
-    async def connect(self, websocket: WebSocket, group_id: int = None, user_id: int = None):
+    async def connect(self, websocket: WebSocket, group_id: Optional[int] = None, user_id: Optional[int] = None):
         await websocket.accept()
         if group_id is not None:
             self.group_connections.setdefault(group_id, set()).add(websocket)
             if user_id is not None:
                 self.active_users[user_id] = datetime.utcnow()
+                self.ws_user[websocket] = user_id
         else:
             self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket, group_id: int = None, user_id: int = None):
+    def disconnect(self, websocket: WebSocket, group_id: Optional[int] = None, user_id: Optional[int] = None):
         if group_id in self.group_connections:
             self.group_connections[group_id].discard(websocket)
         if user_id is not None:
             self.active_users.pop(user_id, None)
+        # remove websocket mapping
+        self.ws_user.pop(websocket, None)
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
-    async def broadcast(self, message: str, group_id: int = None):
+    async def broadcast(self, message: str, group_id: Optional[int] = None):
         if group_id is not None:
             conns = list(self.group_connections.get(group_id, set()))
             for ws in conns:
@@ -54,6 +59,7 @@ class ConnectionManager:
                 except RuntimeError:
                     # silently drop broken connections
                     self.group_connections[group_id].discard(ws)
+                    self.ws_user.pop(ws, None)
         else:
             for connection in self.active_connections:
                 await connection.send_text(message)
@@ -75,6 +81,18 @@ def index(request: Request, user: Optional[User] = Depends(get_current_user)):
 def active_users(db: Session = Depends(get_db)):
     ids = list(manager.active_users.keys())
     users = db.query(User).filter(User.id.in_(ids)).all() if ids else []
+    return [{"id": u.id, "username": u.username} for u in users]
+
+
+@router.get("/api/groups/{group_id}/active_users")
+def active_users_in_group(group_id: int, db: Session = Depends(get_db)):
+    conns = manager.group_connections.get(group_id, set())
+    user_ids: Set[int] = set()
+    for ws in conns:
+        uid = manager.ws_user.get(ws)
+        if uid:
+            user_ids.add(uid)
+    users = db.query(User).filter(User.id.in_(user_ids)).all() if user_ids else []
     return [{"id": u.id, "username": u.username} for u in users]
 
 
@@ -137,10 +155,13 @@ def get_messages(group_id: int, db: Session = Depends(get_db)):
 
 
 @router.websocket("/ws/chat/{group_id}")
-async def websocket_endpoint(websocket: WebSocket, group_id: int, db: Session = Depends(get_db)):
+async def websocket_chat(websocket: WebSocket, group_id: int, db: Session = Depends(get_db)):
     # Simple auth via cookie-backed session
     from .auth import SESSION_COOKIE, _SESSION_STORE
     sid = websocket.cookies.get(SESSION_COOKIE)
+    if not isinstance(sid, str):
+        await websocket.close(code=4401)
+        return
     user_id = _SESSION_STORE.get(sid)
     if not user_id:
         await websocket.close(code=4401)
@@ -173,7 +194,7 @@ async def websocket_endpoint(websocket: WebSocket, group_id: int, db: Session = 
 
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_notifications(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
@@ -184,7 +205,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @router.post("/create_group")
-async def create_group(
+async def create_group_form(
     name: str = Form(...),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
