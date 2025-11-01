@@ -6,6 +6,7 @@
   const groupNameInput = document.getElementById('groupName');
   const messageForm = document.getElementById('messageForm');
   const messageInput = document.getElementById('messageInput');
+  const currentGroupTitle = document.getElementById('currentGroupTitle');
   let currentGroup = null;
   let ws = null;
 
@@ -35,7 +36,7 @@
       const btn = document.createElement('button');
       btn.textContent = g.name;
       btn.className = 'ghost';
-      btn.onclick = () => joinAndOpen(g.id);
+      btn.onclick = () => joinAndOpen(g.id, g.name);
       groupsDiv.appendChild(btn);
     });
   }
@@ -76,11 +77,12 @@
     ws.onclose = () => {};
   }
 
-  function joinAndOpen(groupId){
+  function joinAndOpen(groupId, groupName){
     api('/api/groups/join?group_id='+groupId, { method: 'POST' })
       .then(() => api('/api/messages?group_id='+groupId))
       .then(msgs => {
         currentGroup = groupId;
+        if (currentGroupTitle) currentGroupTitle.textContent = groupName || `#${groupId}`;
         renderMessages(msgs);
         openWS(groupId);
       })
