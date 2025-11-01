@@ -16,6 +16,19 @@
     });
   }
 
+  function pad2(n){ return String(n).padStart(2, '0'); }
+  function parseIsoToDate(s){
+    if (!s) return new Date();
+    // Ensure UTC if no timezone is present
+    if (typeof s === 'string' && !/[zZ]|[+\-]\d{2}:?\d{2}$/.test(s)) s = s + 'Z';
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+  function fmtTimeHHMMSS(input){
+    const d = input instanceof Date ? input : parseIsoToDate(input);
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  }
+
   function renderGroups(list){
     groupsDiv.innerHTML = '';
     list.forEach(g => {
@@ -32,7 +45,8 @@
     list.forEach(m => {
       const div = document.createElement('div');
       div.className = 'msg';
-      div.textContent = m.author+': '+m.content;
+      const t = fmtTimeHHMMSS(m.created_at);
+      div.textContent = `[${t}] ${m.author}: ${m.content}`;
       messagesDiv.appendChild(div);
     });
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -43,10 +57,12 @@
     try {
         const message = JSON.parse(text);
         div.className = 'msg';
-        div.textContent = `${message.author}: ${message.content}`;
+        const t = fmtTimeHHMMSS(message.created_at || new Date());
+        div.textContent = `[${t}] ${message.author}: ${message.content}`;
     } catch (e) {
         div.className = 'sys';
-        div.textContent = text;
+        const t = fmtTimeHHMMSS(new Date());
+        div.textContent = `[${t}] ${text}`;
     }
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
