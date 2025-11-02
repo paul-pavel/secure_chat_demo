@@ -152,8 +152,8 @@
   notificationWs.onmessage = function(event) {
       const message = event.data;
       if (message.startsWith("new_group:")) {
-          // A simple way to update the group list is to reload the page.
-          window.location.reload();
+          // Refresh groups list without reloading the page to keep current chat open
+          loadGroups();
       }
   };
 

@@ -93,7 +93,7 @@ def list_groups(db: Session = Depends(get_chat_db)):
 
 
 @router.post("/api/groups")
-def create_group(name: str, user: User = Depends(get_current_user), db: Session = Depends(get_chat_db)):
+async def create_group(name: str, user: User = Depends(get_current_user), db: Session = Depends(get_chat_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
     name = name.strip()
@@ -107,6 +107,8 @@ def create_group(name: str, user: User = Depends(get_current_user), db: Session 
     m = Membership(user_id=user.id, group_id=g.id)
     db.add(m)
     db.commit()
+    # notify other clients to refresh group list
+    await manager.broadcast(f"new_group:{g.name}")
     return {"id": g.id, "name": g.name}
 
 
