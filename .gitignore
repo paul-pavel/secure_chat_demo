@@ -1,0 +1,22 @@
+# SQLite databases
+/data/*.sqlite3
+/data/*.sqlite
+/data/*.db
+
+# Python caches
+__pycache__/
+app/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Logs and PID
+server.log
+server.pid
+
+# TLS certificates
+/tls/*.pem

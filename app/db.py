@@ -12,8 +12,10 @@ class ChatBase(DeclarativeBase):
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-USERS_DB_PATH = BASE_DIR / "users.sqlite3"
-CHAT_DB_PATH = BASE_DIR / "chat.sqlite3"
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+USERS_DB_PATH = DATA_DIR / "users.sqlite3"
+CHAT_DB_PATH = DATA_DIR / "chat.sqlite3"
 
 users_engine = create_engine(f"sqlite:///{USERS_DB_PATH}", connect_args={"check_same_thread": False})
 chat_engine = create_engine(f"sqlite:///{CHAT_DB_PATH}", connect_args={"check_same_thread": False})

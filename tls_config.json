@@ -2,7 +2,7 @@
   "country": "RU",
   "state": "Nizhny Novgorod",
   "locality": "Nizhny Novgorod",
-  "organization": "NSTU n.a. R.E. Alekseev",
+  "organization": "NSTU n.a. R.E.Alekseev",
   "common_name": "localhost",
   "valid_days": 365,
   "key_bits": 2048

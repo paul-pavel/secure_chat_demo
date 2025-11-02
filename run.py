@@ -9,6 +9,9 @@ from app.config import load_tls_config, TLSConfig
 def ensure_self_signed(cert_path: Path, key_path: Path, cfg: TLSConfig):
     if cert_path.exists() and key_path.exists():
         return
+    # Ensure target directory exists
+    cert_path.parent.mkdir(parents=True, exist_ok=True)
+    key_path.parent.mkdir(parents=True, exist_ok=True)
     from cryptography import x509
     from cryptography.x509.oid import NameOID
     from cryptography.hazmat.primitives import hashes, serialization
@@ -51,8 +54,8 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind")
     parser.add_argument("--tls", action="store_true", help="Enable HTTPS with TLS")
-    parser.add_argument("--certfile", type=Path, default=Path("cert.pem"))
-    parser.add_argument("--keyfile", type=Path, default=Path("key.pem"))
+    parser.add_argument("--certfile", type=Path, default=Path(".tls/cert.pem"))
+    parser.add_argument("--keyfile", type=Path, default=Path(".tls/key.pem"))
     parser.add_argument("--tls-config", type=Path, default=Path("tls_config.json"))
     args = parser.parse_args()
 
