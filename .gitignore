@@ -5,7 +5,7 @@
 
 # Python caches
 __pycache__/
-app/__pycache__/
+/app/__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -19,4 +19,4 @@ server.log
 server.pid
 
 # TLS certificates
-/tls/*.pem
+/.tls/*.pem
