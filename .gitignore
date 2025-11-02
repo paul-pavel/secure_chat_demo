@@ -4,8 +4,8 @@
 /data/*.db
 
 # Python caches
-__pycache__/
-/app/__pycache__/
+__pycache__/*
+/app/__pycache__/*
 *.pyc
 *.pyo
 *.pyd
