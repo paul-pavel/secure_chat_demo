@@ -19,6 +19,8 @@ class ConnectionManager:
         self.active_connections: List[WebSocket] = []
         # map each websocket to the associated user id for per-group active lists
         self.ws_user: Dict[WebSocket, int] = {}
+        # track user -> last known client IP
+        self.user_ips: Dict[int, str] = {}
 
     async def connect(self, websocket: WebSocket, group_id: Optional[int] = None, user_id: Optional[int] = None):
         await websocket.accept()
@@ -27,6 +29,11 @@ class ConnectionManager:
             if user_id is not None:
                 self.active_users[user_id] = datetime.utcnow()
                 self.ws_user[websocket] = user_id
+                try:
+                    if websocket.client and getattr(websocket.client, 'host', None):
+                        self.user_ips[user_id] = websocket.client.host
+                except Exception:
+                    pass
         else:
             self.active_connections.append(websocket)
 
@@ -35,6 +42,8 @@ class ConnectionManager:
             self.group_connections[group_id].discard(websocket)
         if user_id is not None:
             self.active_users.pop(user_id, None)
+            # Optionally clear IP mapping when user disconnects
+            self.user_ips.pop(user_id, None)
         # remove websocket mapping
         self.ws_user.pop(websocket, None)
         if websocket in self.active_connections:
@@ -71,7 +80,7 @@ def index(request: Request, user: Optional[User] = Depends(get_current_user)):
 def active_users(db: Session = Depends(get_users_db)):
     ids = list(manager.active_users.keys())
     users = db.query(User).filter(User.id.in_(ids)).all() if ids else []
-    return [{"id": u.id, "username": u.username} for u in users]
+    return [{"id": u.id, "username": u.username, "ip": manager.user_ips.get(u.id)} for u in users]
 
 
 @router.get("/api/groups/{group_id}/active_users")
@@ -83,7 +92,7 @@ def active_users_in_group(group_id: int, db: Session = Depends(get_users_db)):
         if uid:
             user_ids.add(uid)
     users = db.query(User).filter(User.id.in_(user_ids)).all() if user_ids else []
-    return [{"id": u.id, "username": u.username} for u in users]
+    return [{"id": u.id, "username": u.username, "ip": manager.user_ips.get(u.id)} for u in users]
 
 
 @router.get("/api/groups")

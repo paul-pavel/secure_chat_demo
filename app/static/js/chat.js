@@ -129,7 +129,7 @@
       activeUsersUl.innerHTML='';
       list.forEach(u => {
         const li = document.createElement('li');
-        li.textContent = u.username;
+        li.textContent = u.ip ? `${u.username} (${u.ip})` : u.username;
         activeUsersUl.appendChild(li);
       });
     }).catch(console.error);
