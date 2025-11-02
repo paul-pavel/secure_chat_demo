@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from passlib.hash import bcrypt_sha256, bcrypt
-from .db import SessionLocal
+from .db import get_users_db
 from .models import User
 
 import secrets
@@ -18,11 +18,7 @@ _SESSION_SECRET = secrets.token_urlsafe(32)
 
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    yield from get_users_db()
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:

@@ -1,23 +1,20 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from .db import Base
+from .db import UsersBase, ChatBase
 
 
-class User(Base):
+class User(UsersBase):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-    memberships = relationship("Membership", back_populates="user", cascade="all, delete-orphan")
-    messages = relationship("Message", back_populates="author", cascade="all, delete-orphan")
-    groups = relationship("Group", secondary="user_group", back_populates="users")
+    # No relationships to chat DB models (separate database)
 
 
-class Group(Base):
+class Group(ChatBase):
     __tablename__ = "groups"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -26,37 +23,32 @@ class Group(Base):
 
     members = relationship("Membership", back_populates="group", cascade="all, delete-orphan")
     messages = relationship("Message", back_populates="group", cascade="all, delete-orphan")
-    users = relationship("User", secondary="user_group", back_populates="groups")
 
 
-class Membership(Base):
+class Membership(ChatBase):
     __tablename__ = "memberships"
     __table_args__ = (UniqueConstraint("user_id", "group_id", name="uq_user_group"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    # user_id references users DB; cannot enforce FK across DBs
+    user_id: Mapped[int] = mapped_column(Integer, index=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"))
     joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="memberships")
     group = relationship("Group", back_populates="members")
 
 
-class Message(Base):
+class Message(ChatBase):
     __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"))
-    author_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    # author_id references users DB; cannot enforce FK across DBs
+    author_id: Mapped[int] = mapped_column(Integer, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 
     group = relationship("Group", back_populates="messages")
-    author = relationship("User", back_populates="messages")
 
 
-class UserGroup(Base):
-    __tablename__ = 'user_group'
-
-    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    group_id = Column(Integer, ForeignKey('groups.id'), primary_key=True)
+# Removed cross-DB association table; use Membership in chat DB.
