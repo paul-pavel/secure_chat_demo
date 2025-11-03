@@ -6,10 +6,14 @@ Features:
 - User registration and login (session cookie)
 - Create and join group chats
 - Real-time messaging via WebSockets
-- List of active users
+- Active users overall and per current group (shows IPs where available)
+- Message timestamps (HH:MM:SS)
+- Independent scrollable messages area (header stays visible)
 - Light/Dark theme UI
 - CLI flags to run over HTTP or HTTPS
-- Self-signed cert generation controlled by `tls_config.json`
+- Automatic cache-busting for static assets (asset_version; override via `ASSET_VERSION`)
+- TLS (HTTPS) with self-signed certificate (stored under `tls/`) controlled by `tls_config.json`
+- Live group list updates without reloading the page
 
 ## Quickstart
 
@@ -30,7 +34,7 @@ python run.py --port 8000
 3) Run over HTTPS with self-signed TLS
 
 ```bash
-python run.py --tls --port 8443 --certfile cert.pem --keyfile key.pem --tls-config tls_config.json
+python run.py --tls --port 8443 --certfile .tls/cert.pem --keyfile .tls/key.pem --tls-config tls_config.json
 ```
 
 Open in browser:
@@ -43,9 +47,17 @@ Open in browser:
 - Mixed content: Browsers block `ws://` from HTTPS origins; we automatically use `wss://` when on HTTPS.
 
 ## Notes
-- This demo uses SQLite for storage. The DB file is created next to the project as `secure_chat.sqlite3`.
-- Active users are tracked by open WebSocket connections and a simple in-memory session store.
-- For production, use a persistent session store (Redis) and secure cookies with a fixed secret.
+- Storage uses two separate SQLite databases under `data/`:
+	- `data/users.sqlite3` (users and credentials)
+	- `data/chat.sqlite3` (groups, memberships, messages)
+	The folder is auto-created on startup.
+- TLS files default to `tls/cert.pem` and `tls/key.pem`. If missing and `--tls` is enabled, a self-signed cert is generated based on `tls_config.json`.
+- Active users are tracked by WebSocket connections; we also expose per-group active users and display client IPs when available.
+- Static assets are versioned each startup (UTC timestamp). Override with `ASSET_VERSION=...` if needed.
+- For production, use a persistent session store (e.g., Redis) and secure cookies with a fixed secret.
+
+## Live updates without reload
+When a user creates a new group, other clients receive a `new_group:` notification via a dedicated WebSocket and refresh the group list in-place (the current chat remains open).
 
 ## License
 MIT
