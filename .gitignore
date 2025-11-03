@@ -14,9 +14,8 @@ __pycache__/*
 .venv/
 venv/
 
-# Logs and PID
-server.log
-server.pid
+# Logs
+*.log
 
 # TLS certificates
 /.tls/*.pem

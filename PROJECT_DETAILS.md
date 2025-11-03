@@ -30,14 +30,14 @@ Note: `Membership.user_id` and `Message.author_id` are integers referencing user
 - Independent scrollable message area
 - Live group list updates via notification WebSocket (`/ws`) without page reload
 - Automatic static asset versioning per startup; override via `ASSET_VERSION`
-- TLS support with self-signed cert stored in `tls/`
+- TLS support with self-signed cert stored in `.tls/`
 
 ## Configuration
 - TLS config: `tls_config.json`
 - Runtime flags (run.py):
   - `--host`, `--port`
   - `--tls` to enable HTTPS
-  - `--certfile`, `--keyfile` (default `tls/cert.pem`, `tls/key.pem`)
+  - `--certfile`, `--keyfile` (default `.tls/cert.pem`, `.tls/key.pem`)
   - `--tls-config`
 - Environment variables:
   - `ASSET_VERSION` to pin asset version for cache-busting
