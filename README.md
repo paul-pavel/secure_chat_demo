@@ -15,7 +15,7 @@ Features:
 - TLS (HTTPS) with self-signed certificate (stored under `tls/`) controlled by `tls_config.json`
 - Live group list updates without reloading the page
 
-## Quickstart
+## Quickstart (Linux)
 
 1) Create a Python venv and install deps
 
@@ -37,6 +37,39 @@ python run.py --port 8000
 python run.py --tls --port 8443 --certfile .tls/cert.pem --keyfile .tls/key.pem --tls-config tls_config.json
 ```
 
+## Quickstart (Windows)
+
+1) Create a Python venv and install deps
+
+PowerShell:
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+CMD:
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\activate.bat
+python -m pip install -r requirements.txt
+```
+
+2) Run over plain HTTP (default port 8000)
+
+```powershell
+python run.py --port 8000
+```
+
+3) Run over HTTPS with self-signed TLS
+
+```powershell
+python run.py --tls --port 8443 --certfile .tls\cert.pem --keyfile .tls\key.pem --tls-config tls_config.json
+```
+
+## Connect
 Open in browser:
 - HTTP:  http://127.0.0.1:8000
 - HTTPS: https://127.0.0.1:8443 (accept the self-signed certificate warning)
