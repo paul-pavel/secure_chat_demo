@@ -41,18 +41,10 @@ python run.py --tls --port 8443 --certfile .tls/cert.pem --keyfile .tls/key.pem 
 
 1) Create a Python venv and install deps
 
-PowerShell:
-
-```powershell
-py -3 -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-```
-
 CMD:
 
 ```bat
-py -3 -m venv .venv
+python -m venv .venv
 .venv\Scripts\activate.bat
 python -m pip install -r requirements.txt
 ```
